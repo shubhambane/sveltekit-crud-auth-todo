@@ -1,7 +1,15 @@
 <script>
+	import { authHandlers, authStore } from '../../store/store';
+	import { getDoc, doc, setDoc } from 'firebase/firestore';
+	import { db } from '../../lib/firebase/firebase';
+
 	let todoList = ['Follow Shubham Bane on LinkedIn'];
 	let newTodo = '';
 	let error = false;
+
+	authStore.subscribe((curr) => {
+		todoList = curr.data.todos;
+	});
 
 	function addTodo() {
 		error = false;
@@ -30,58 +38,76 @@
 
 		todoList = newTodoList;
 	}
+	async function saveTodos() {
+		try {
+			const userRef = doc(db, 'users', $authStore.user.uid);
+			await setDoc(
+				userRef,
+				{
+					todos: todoList
+				},
+				{ merge: true }
+			);
+		} catch (err) {
+			console.log('There was an error saving your information');
+		}
+	}
 </script>
 
-<div class="mainContainer">
-	<div class="headerContainer">
-		<h1>Todo List</h1>
-	<div class="headerBtn">
-		<button
-		><i class="fa-regular fa-floppy-disk"></i>
-		<p>Save</p></button
-	>
-	<button
-		>
-		<i class="fa-solid fa-arrow-right-from-bracket"></i>
-		<p>Logout</p></button
-	>
-	</div>
-	</div>
-	<main>
-		{#if todoList.length === 0}
-			<p>You have nothing to do!</p>
-		{/if}
-		{#each todoList as todo, index}
-			<div class="todo">
-				<p>
-					{index + 1}. {todo}
-				</p>
-				<div class="actions">
-					<i
-						on:click={() => {
-							editTodo(index);
-						}}
-						on:keydown={() => {}}
-						aria-hidden="true"
-						class="fa-regular fa-pen-to-square"
-					></i>
-					<i
-						on:click={() => {
-							deleteTodo(index);
-						}}
-						on:keydown={() => {}}
-						aria-hidden="true"
-						class="fa-regular fa-trash-can"
-					></i>
-				</div>
+{#if $authStore.loading}
+	<p>Loading...</p>
+{/if}
+{#if !$authStore.loading}
+	<div class="mainContainer">
+		<div class="headerContainer">
+			<h1>Todo List</h1>
+			<div class="headerBtn">
+				<button on:click={saveTodos}
+					><i class="fa-regular fa-floppy-disk"></i>
+					<p>Save</p></button
+				>
+				<button on:click={authHandlers.logout}>
+					<i class="fa-solid fa-arrow-right-from-bracket"></i>
+					<p>Logout</p></button
+				>
 			</div>
-		{/each}
-	</main>
-	<div class={'enterTodo ' + (error ? 'errorBorder' : '')}>
-		<input bind:value={newTodo} type="text" placeholder="Enter a todo" />
-		<button on:click={addTodo}>Add</button>
+		</div>
+		<main>
+			{#if todoList.length === 0}
+				<p>You have nothing to do!</p>
+			{/if}
+			{#each todoList as todo, index}
+				<div class="todo">
+					<p>
+						{index + 1}. {todo}
+					</p>
+					<div class="actions">
+						<i
+							on:click={() => {
+								editTodo(index);
+							}}
+							on:keydown={() => {}}
+							aria-hidden="true"
+							class="fa-regular fa-pen-to-square"
+						></i>
+						<i
+							on:click={() => {
+								deleteTodo(index);
+							}}
+							on:keydown={() => {}}
+							aria-hidden="true"
+							class="fa-regular fa-trash-can"
+						></i>
+					</div>
+				</div>
+			{/each}
+		</main>
+		<div class={'enterTodo ' + (error ? 'errorBorder' : '')}>
+			<input bind:value={newTodo} type="text" placeholder="Enter a todo" />
+			<button on:click={addTodo}>Add</button>
+		</div>
 	</div>
-</div>
+{/if}
 
 <style>
 	.mainContainer {

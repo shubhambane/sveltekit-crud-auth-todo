@@ -1,4 +1,8 @@
 <script>
+
+import { authHandlers } from "../store/store";
+
+
     let email = '';
     let password = '';
     let confirmPassword = '';
@@ -9,7 +13,7 @@
         if (authenticating) {
             return;
         }
-        if (!email || !password || (register && !confirmPass)) {
+        if (!email || !password || (register && !confirmPassword)) {
             error = true;
             return;
         }
@@ -58,7 +62,13 @@
         </p>
         {/if}
        
-        <button type="submit">Login</button>
+        <button on:click={handleAuthenticate} type="submit" class="submitBtn">
+            {#if authenticating}
+            <i class="fa-solid fa-spinner loadingSpinner spin" />
+        {:else}
+            Submit
+        {/if}
+        </button>
     </form>
     <!-- <p>Register</p> -->
     {#if register}
@@ -116,7 +126,22 @@
         border-radius: 8px;
         cursor: pointer;
         font-size: 1.1em;
+        display: grid;
+        place-content: center;
     }
+    .spin {
+        animation: spin 2s  infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
 
     form button:hover {
         background: #222222;
